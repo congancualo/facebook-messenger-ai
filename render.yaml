@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: chatbot-cong-an-cua-lo
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: META_VERIFY_TOKEN
+        generateValue: true
+      - key: META_APP_SECRET
+        sync: false
+      - key: META_PAGE_ACCESS_TOKEN
+        sync: false
+      - key: META_PAGE_ID
+        sync: false
+      - key: META_GRAPH_VERSION
+        value: v26.0
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-5.6
+      - key: OPENAI_VECTOR_STORE_ID
+        sync: false
+      - key: UNIT_NAME
+        value: Công an phường Cửa Lò
+      - key: DUTY_PHONE
+        sync: false
+      - key: OFFICE_ADDRESS
+        sync: false
