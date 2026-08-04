@@ -71,6 +71,12 @@ async function handleEvent(event) {
   try {
     const answer = await answerFromKnowledge(psid, text);
     await sendText(psid, answer);
+  } catch (error) {
+    console.error("Gemini request failed", error);
+    await sendText(
+      psid,
+      "Trợ lý tự động đang tạm thời không thể tra cứu tài liệu. Vui lòng thử lại sau hoặc chọn “Gặp cán bộ trực” để được hỗ trợ."
+    );
   } finally {
     await sendTyping(psid, false).catch(() => undefined);
   }

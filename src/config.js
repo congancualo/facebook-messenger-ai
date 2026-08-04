@@ -12,6 +12,16 @@ function parsePort(value) {
   return port;
 }
 
+function normalizeFileSearchStore(value) {
+  const store = value.trim();
+  if (!store.startsWith("fileSearchStores/")) {
+    throw new Error(
+      "GEMINI_FILE_SEARCH_STORE must start with fileSearchStores/"
+    );
+  }
+  return store;
+}
+
 export const config = {
   port: parsePort(process.env.PORT),
   metaVerifyToken: required("META_VERIFY_TOKEN"),
@@ -19,9 +29,11 @@ export const config = {
   metaPageAccessToken: required("META_PAGE_ACCESS_TOKEN"),
   metaPageId: process.env.META_PAGE_ID?.trim() ?? "",
   metaGraphVersion: process.env.META_GRAPH_VERSION?.trim() ?? "v26.0",
-  openaiApiKey: required("OPENAI_API_KEY"),
-  openaiModel: process.env.OPENAI_MODEL?.trim() ?? "gpt-5.6",
-  openaiVectorStoreId: required("OPENAI_VECTOR_STORE_ID"),
+  geminiApiKey: required("GEMINI_API_KEY"),
+  geminiModel: process.env.GEMINI_MODEL?.trim() ?? "gemini-3.1-flash-lite",
+  geminiFileSearchStore: normalizeFileSearchStore(
+    required("GEMINI_FILE_SEARCH_STORE")
+  ),
   unitName: process.env.UNIT_NAME?.trim() ?? "Công an phường",
   dutyPhone: process.env.DUTY_PHONE?.trim() ?? "số điện thoại trực ban chính thức",
   officeAddress: process.env.OFFICE_ADDRESS?.trim() ?? "trụ sở Công an phường",
