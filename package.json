@@ -1,8 +1,8 @@
 {
-  "name": "facebook-messenger-ai-starter",
-  "version": "1.1.0",
+  "name": "facebook-messenger-gemini-ai",
+  "version": "2.0.0",
   "private": true,
-  "description": "Chatbot AI cho Facebook Messenger, triển khai trực tiếp từ GitHub lên Render.",
+  "description": "Chatbot Gemini AI cho Facebook Messenger, triển khai trực tiếp từ GitHub lên Render.",
   "type": "module",
   "scripts": {
     "dev": "node --watch --env-file=.env src/server.js",
@@ -13,8 +13,8 @@
     "test": "npm run check"
   },
   "dependencies": {
-    "express": "^5.1.0",
-    "openai": "^7.3.0"
+    "@google/genai": "^2.13.0",
+    "express": "^5.1.0"
   },
   "engines": {
     "node": ">=24 <25"

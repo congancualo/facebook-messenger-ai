@@ -1,25 +1,75 @@
-# Hướng dẫn nhanh
+# Chuyển repository hiện có sang Gemini
 
-## Phần mã nguồn đã hoàn thành
+## Bước 1 — Tải mã mới lên GitHub
 
-Không cần sửa thêm `package.json`, cài máy ảo, cấu hình Nginx hoặc Docker.
+1. Giải nén bộ mã Gemini.
+2. Mở repository GitHub hiện có.
+3. Chọn **Add file → Upload files**.
+4. Kéo toàn bộ nội dung bên trong thư mục đã giải nén lên GitHub.
+5. Commit với nội dung: `Switch chatbot from OpenAI to Gemini`.
 
-## Anh thực hiện 3 việc
-
-1. Giải nén ZIP và tải toàn bộ nội dung trong thư mục lên một repository GitHub.
-2. Trên Render chọn **New → Blueprint**, kết nối repository đó và nhập các khóa được yêu cầu.
-3. Sau khi Render chạy thành công, nhập vào Meta:
+Các file quan trọng phải nằm ngay ở thư mục gốc:
 
 ```text
-Callback URL: https://TEN-DICH-VU.onrender.com/webhook
-Verify Token: giá trị META_VERIFY_TOKEN trong Render
+package.json
+render.yaml
+src/
+scripts/
+knowledge/
 ```
 
-## Không được tải lên GitHub
+## Bước 2 — Tạo kho tài liệu Gemini
 
-- File `.env` thật.
-- OpenAI API Key.
-- Meta App Secret.
-- Page Access Token.
+1. Chép tài liệu đã duyệt vào `knowledge/` trên máy.
+2. Tạo `.env`:
 
-File `.env.example` chỉ là mẫu, không chứa khóa thật và có thể tải lên GitHub.
+```env
+GEMINI_API_KEY=KHOA_GEMINI_CUA_ANH
+```
+
+3. Chạy:
+
+```powershell
+npm.cmd install
+npm.cmd run knowledge
+```
+
+4. Sao chép kết quả:
+
+```text
+fileSearchStores/...
+```
+
+## Bước 3 — Sửa Environment trên Render
+
+Thêm:
+
+```text
+GEMINI_API_KEY
+GEMINI_FILE_SEARCH_STORE
+```
+
+Kiểm tra:
+
+```text
+GEMINI_MODEL=gemini-3.1-flash-lite
+```
+
+Chọn **Save and deploy**.
+
+Không nhập mã `vs_...` của OpenAI vào biến Gemini.
+
+## Bước 4 — Kiểm tra
+
+- Render phải hiện `Live`.
+- `/health` phải trả `{"ok":true}`.
+- Nhắn câu hỏi có trong tài liệu cho Fanpage.
+- Xem Render Logs nếu chatbot không trả lời.
+
+## Có thể xóa sau khi Gemini hoạt động
+
+```text
+OPENAI_API_KEY
+OPENAI_MODEL
+OPENAI_VECTOR_STORE_ID
+```

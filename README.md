@@ -1,68 +1,103 @@
-# Chatbot AI Facebook Messenger – Công an phường Cửa Lò
+# Chatbot Gemini AI Facebook Messenger – Công an phường Cửa Lò
 
-Bộ mã đã được cấu hình để triển khai từ **GitHub lên Render** mà không cần tự quản lý máy ảo, Nginx, Docker hay chứng thư HTTPS.
-
-## Việc cần làm
-
-### 1. Đưa mã lên GitHub
-
-Tạo một repository mới, sau đó tải **toàn bộ file và thư mục ở cấp gốc này** lên repository. Không tải riêng thư mục cha và không tải file `.env` có khóa bí mật.
-
-Các file quan trọng đã chuẩn bị sẵn:
-
-- `render.yaml`: cấu hình Render Blueprint.
-- `.node-version`: khóa phiên bản Node.js.
-- `.github/workflows/validate.yml`: tự kiểm tra mã khi đẩy lên GitHub.
-- `package.json`: lệnh chạy Render là `npm start` → `node src/server.js`.
-
-### 2. Tạo Render Blueprint từ repository
-
-1. Đăng nhập Render và kết nối GitHub.
-2. Chọn **New → Blueprint**.
-3. Chọn repository vừa tải lên.
-4. Render sẽ đọc `render.yaml` và yêu cầu nhập các biến bí mật.
-5. Nhập đúng các giá trị:
-
-| Biến | Giá trị cần nhập |
-|---|---|
-| `META_APP_SECRET` | App Secret trong Meta App |
-| `META_PAGE_ACCESS_TOKEN` | Page Access Token |
-| `META_PAGE_ID` | ID Fanpage |
-| `OPENAI_API_KEY` | OpenAI API key |
-| `OPENAI_VECTOR_STORE_ID` | ID kho tài liệu, dạng `vs_...` |
-| `DUTY_PHONE` | Số điện thoại trực ban chính thức |
-| `OFFICE_ADDRESS` | Địa chỉ trụ sở chính thức |
-
-`META_VERIFY_TOKEN` được Render tự tạo. Sau khi triển khai, mở **Render → Service → Environment**, sao chép giá trị này để nhập vào phần Verify Token của Meta.
-
-### 3. Cấu hình Meta Webhook
-
-Sau khi Render triển khai thành công, lấy địa chỉ dịch vụ, ví dụ:
+Phiên bản **2.0** đã chuyển từ OpenAI sang:
 
 ```text
-https://chatbot-cong-an-cua-lo.onrender.com
+Facebook Messenger → Render → Gemini API → Gemini File Search
 ```
 
-Điền trên Meta:
+Không cần máy ảo, Nginx, Docker, OpenAI API Key hoặc OpenAI Vector Store.
+
+## Những biến môi trường đang sử dụng
+
+### Meta/Facebook
+
+- `META_VERIFY_TOKEN`
+- `META_APP_SECRET`
+- `META_PAGE_ACCESS_TOKEN`
+- `META_PAGE_ID`
+- `META_GRAPH_VERSION`
+
+### Gemini
+
+- `GEMINI_API_KEY`
+- `GEMINI_MODEL=gemini-3.1-flash-lite`
+- `GEMINI_FILE_SEARCH_STORE=fileSearchStores/...`
+
+### Thông tin đơn vị
+
+- `UNIT_NAME`
+- `DUTY_PHONE`
+- `OFFICE_ADDRESS`
+
+Các biến cũ sau đây không còn được sử dụng:
 
 ```text
-Callback URL: https://chatbot-cong-an-cua-lo.onrender.com/webhook
-Verify Token: giá trị META_VERIFY_TOKEN trên Render
+OPENAI_API_KEY
+OPENAI_MODEL
+OPENAI_VECTOR_STORE_ID
 ```
 
-Đăng ký tối thiểu:
+## 1. Đưa phiên bản mới lên GitHub
+
+Giải nén ZIP, sau đó tải **toàn bộ file và thư mục ở cấp gốc** lên repository GitHub hiện có. Cho phép GitHub thay thế các file trùng tên.
+
+Không tải file `.env` thật lên GitHub.
+
+## 2. Tạo Gemini API Key
+
+Tạo khóa tại Google AI Studio. Khóa chỉ được đặt trong:
+
+- file `.env` trên máy để nạp tài liệu;
+- phần Environment của Render để chatbot gọi Gemini.
+
+Không đưa khóa vào mã nguồn hoặc README.
+
+## 3. Tạo Gemini File Search Store
+
+Chép tài liệu đã duyệt vào thư mục `knowledge/`. File `knowledge/README.md` được tự động bỏ qua.
+
+Tạo file `.env` ở thư mục gốc:
+
+```env
+GEMINI_API_KEY=KHOA_GEMINI_CUA_ANH
+```
+
+Chạy trên Windows PowerShell:
+
+```powershell
+npm.cmd install
+npm.cmd run knowledge
+```
+
+Kết quả cuối cùng có dạng:
 
 ```text
-messages
-messaging_postbacks
+GEMINI_FILE_SEARCH_STORE=fileSearchStores/abc123...
 ```
 
-### 4. Kiểm tra
+Sao chép toàn bộ phần bắt đầu bằng `fileSearchStores/` vào Render.
+
+## 4. Cấu hình Render
+
+Trong dịch vụ Render, thêm hoặc sửa:
+
+```text
+GEMINI_API_KEY=<khóa Gemini>
+GEMINI_MODEL=gemini-3.1-flash-lite
+GEMINI_FILE_SEARCH_STORE=fileSearchStores/...
+```
+
+Sau đó chọn **Save and deploy**.
+
+Các biến OpenAI cũ có thể xóa sau khi Gemini hoạt động ổn định.
+
+## 5. Kiểm tra
 
 Mở:
 
 ```text
-https://chatbot-cong-an-cua-lo.onrender.com/health
+https://TEN-DICH-VU.onrender.com/health
 ```
 
 Kết quả đúng:
@@ -71,31 +106,19 @@ Kết quả đúng:
 {"ok":true}
 ```
 
-Sau đó dùng một tài khoản Facebook khác nhắn tin cho Fanpage.
+Sau đó nhắn một câu hỏi có nội dung trong kho tài liệu cho Fanpage.
 
-## Nạp kho tài liệu
+## Nguyên tắc an toàn
 
-Việc nạp tài liệu thực hiện một lần trên máy cá nhân:
+- Chatbot chỉ trả lời khi Gemini trả về trích dẫn từ File Search.
+- Nếu không tìm thấy căn cứ trong tài liệu, chatbot hướng dẫn gặp cán bộ trực.
+- Yêu cầu có dấu hiệu chứa OTP, mật khẩu, PIN, tài khoản ngân hàng hoặc số giấy tờ nhạy cảm bị chặn trước khi gửi đến Gemini.
+- Không nạp hồ sơ nghiệp vụ, dữ liệu dân cư, tài liệu điều tra, bí mật nhà nước hoặc dữ liệu cá nhân nhạy cảm.
+- Gói miễn phí chỉ phù hợp thử nghiệm. Cần xem xét điều khoản dữ liệu và phương án trả phí trước khi vận hành chính thức.
 
-```bash
-cp .env.example .env
-npm install
-npm run knowledge
-```
+## Lưu ý kỹ thuật
 
-Sao chép kết quả `OPENAI_VECTOR_STORE_ID=vs_...` vào Render.
-
-## Tạo lời chào và menu Messenger
-
-Sau khi điền thông tin Meta vào `.env` trên máy cá nhân:
-
-```bash
-npm run profile
-```
-
-## Lưu ý vận hành
-
-- Gói Render Free chỉ phù hợp thử nghiệm; nên nâng cấp trước khi vận hành chính thức.
-- Không đưa `.env`, API key, App Secret hoặc Page Access Token lên GitHub.
-- Không nạp hồ sơ nghiệp vụ, dữ liệu dân cư, tài liệu điều tra hoặc tài liệu mật vào kho AI.
-- Trạng thái chuyển cán bộ hiện lưu trong RAM và sẽ mất khi dịch vụ khởi động lại; đây là bản MVP.
+- Mô hình mặc định là `gemini-3.1-flash-lite` vì đây là mô hình chi phí thấp hiện hỗ trợ Gemini File Search.
+- Gemini File Search Store có tên dạng `fileSearchStores/...`, không phải `vs_...`.
+- Mỗi lần chạy `npm run knowledge`, chương trình tạo một File Search Store mới.
+- Trạng thái chuyển cán bộ đang lưu trong RAM và sẽ mất khi Render khởi động lại; đây là bản MVP.

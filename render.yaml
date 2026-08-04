@@ -21,11 +21,11 @@ services:
         sync: false
       - key: META_GRAPH_VERSION
         value: v26.0
-      - key: OPENAI_API_KEY
+      - key: GEMINI_API_KEY
         sync: false
-      - key: OPENAI_MODEL
-        value: gpt-5.6
-      - key: OPENAI_VECTOR_STORE_ID
+      - key: GEMINI_MODEL
+        value: gemini-3.1-flash-lite
+      - key: GEMINI_FILE_SEARCH_STORE
         sync: false
       - key: UNIT_NAME
         value: Công an phường Cửa Lò
