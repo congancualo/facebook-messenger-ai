@@ -24,6 +24,8 @@ Quy tắc bắt buộc:
 8. Với tình huống đang xảy ra có nguy cơ đến tính mạng, cháy nổ, bạo lực hoặc tội phạm, hướng dẫn gọi số khẩn cấp phù hợp và liên hệ trực ban ${config.dutyPhone}.
 9. Luôn nói rõ đây là trợ lý tự động khi có khả năng người dùng hiểu nhầm là cán bộ đang trực tiếp trả lời.
 10. Trả lời bằng tiếng Việt, lịch sự, rõ ràng; ưu tiên 3-8 câu, có các bước cụ thể khi phù hợp.
+11. Tuyệt đối không viết các dòng “Nguồn tra cứu”, “Nguồn tham khảo”, “Tài liệu tra cứu”, “Sources” hoặc tên tệp trong câu trả lời gửi người dùng.
+12. Có thể nêu tên văn bản pháp luật, điều, khoản và cơ quan có thẩm quyền nếu nội dung đó có trong tài liệu; đây không được xem là dòng nguồn kỹ thuật.
 `;
 
 export async function answerFromKnowledge(_psid, userText) {
@@ -50,7 +52,7 @@ export async function answerFromKnowledge(_psid, userText) {
 
 function extractGroundedText(interaction) {
   const textParts = [];
-  const citedFiles = new Set();
+  let hasCitation = false;
 
   for (const step of interaction.steps ?? []) {
     if (step.type !== "model_output") continue;
@@ -66,20 +68,41 @@ function extractGroundedText(interaction) {
           typeof annotation.file_name === "string" ||
           typeof annotation.fileName === "string";
 
-        if (!isFileCitation) continue;
-        const fileName = annotation.file_name ?? annotation.fileName;
-        if (typeof fileName === "string" && fileName.trim()) {
-          citedFiles.add(fileName.trim());
+        if (isFileCitation) {
+          hasCitation = true;
         }
       }
     }
   }
 
-  const fallbackOutput = interaction.output_text ?? interaction.outputText ?? "";
-  const body = textParts.join("\n").trim() || String(fallbackOutput).trim();
-  const sources = [...citedFiles].slice(0, 3);
-  const sourceLine = sources.length ? `\n\nNguồn tra cứu: ${sources.join(", ")}` : "";
-  const text = `${body}${sourceLine}`.trim().slice(0, 6000);
+  const fallbackOutput =
+    interaction.output_text ?? interaction.outputText ?? "";
 
-  return { text, hasCitation: citedFiles.size > 0 };
+  const body =
+    textParts.join("\n").trim() || String(fallbackOutput).trim();
+
+  const text = stripVisibleSourceLines(body).trim().slice(0, 6000);
+
+  return { text, hasCitation };
+}
+
+function stripVisibleSourceLines(text) {
+  return String(text)
+    // Xóa một dòng nguồn riêng, kể cả có bullet hoặc markdown đậm.
+    .replace(
+      /(?:^|\n)\s*(?:[-*•]\s*)?(?:\*\*)?\s*(?:nguồn\s+tra\s+cứu|nguồn\s+tham\s+khảo|tài\s+liệu\s+tra\s+cứu|tài\s+liệu\s+tham\s+khảo|sources?|source\s+files?)\s*(?:\*\*)?\s*[:：-]\s*[^\n]*(?=\n|$)/giu,
+      "\n"
+    )
+    // Xóa phần nguồn bị nối vào cuối cùng một đoạn.
+    .replace(
+      /\s+(?:nguồn\s+tra\s+cứu|nguồn\s+tham\s+khảo|tài\s+liệu\s+tra\s+cứu|tài\s+liệu\s+tham\s+khảo|sources?)\s*[:：-]\s*[^\n]*$/giu,
+      ""
+    )
+    // Xóa dòng chỉ gồm danh sách tên file trích dẫn.
+    .replace(
+      /(?:^|\n)\s*(?:[-*•]\s*)?(?:[\wÀ-ỹ()[\].,\s-]+\.(?:txt|md|pdf|docx?|json|csv))(?:\s*,\s*[\wÀ-ỹ()[\].,\s-]+\.(?:txt|md|pdf|docx?|json|csv))*\s*(?=\n|$)/giu,
+      "\n"
+    )
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n");
 }
